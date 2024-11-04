@@ -17,7 +17,7 @@ def carregar_modelo():
         # Configuração para usar menos memória
         config = {
             "low_cpu_mem_usage": True,
-            "torch_dtype": torch.float16  # Usa precisão reduzida
+            # Removemos torch_dtype para usar o padrão
         }
         
         tokenizer = AutoTokenizer.from_pretrained(
@@ -87,7 +87,7 @@ def main():
     # Interface mais leve
     with st.container():
         selecao = st.selectbox('Idioma de destino:', list(idiomas.keys()))
-        texto_original = st.text_area('Texto em português:', max_chars=500)
+        texto_original = st.text_area('Texto em português: ', max_chars=500)
         
         col1, col2 = st.columns(2)
         
