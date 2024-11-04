@@ -36,9 +36,12 @@ def carregar_modelo():
 # Função otimizada para gerar texto
 def gerar_texto_bloom(texto, tokenizer, modelo, max_length=50):
     try:
-        with torch.inference_mode():  # Mais eficiente que no_grad
+        with torch.inference_mode():
+            # Adiciona um prompt mais específico para manter o foco
+            prompt = f"Traduza o seguinte texto mantendo o significado original: {texto}"
+            
             entradas = tokenizer(
-                texto,
+                prompt,
                 return_tensors='pt',
                 padding=True,
                 truncation=True,
@@ -48,17 +51,23 @@ def gerar_texto_bloom(texto, tokenizer, modelo, max_length=50):
             saidas = modelo.generate(
                 entradas.input_ids,
                 max_length=max_length,
-                temperature=0.7,
+                temperature=0.3,          # Reduzido de 0.7 para 0.3 (menos criativo)
                 num_return_sequences=1,
-                repetition_penalty=1.2,
-                no_repeat_ngram_size=2,
+                repetition_penalty=1.5,   # Aumentado para evitar repetições
+                no_repeat_ngram_size=3,
                 do_sample=True,
-                top_k=40,
-                top_p=0.9,
+                top_k=20,                 # Reduzido de 40 para 20 (mais focado)
+                top_p=0.7,                # Reduzido de 0.9 para 0.7 (mais conservador)
                 pad_token_id=tokenizer.pad_token_id
             )
             
-            return tokenizer.decode(saidas[0], skip_special_tokens=True)
+            texto_gerado = tokenizer.decode(saidas[0], skip_special_tokens=True)
+            
+            # Remove o prompt da saída se necessário
+            if "Traduza o seguinte texto" in texto_gerado:
+                texto_gerado = texto_gerado.split(": ", 1)[-1]
+                
+            return texto_gerado
     except Exception as e:
         raise Exception(f'Erro na geração de texto: {str(e)}')
 
