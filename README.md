@@ -14,7 +14,7 @@ Transformers (Bloom 560M)
 Google Translator
 PyTorch
 
-🎓 Projeto Acadêmico
+🎓 Projeto Acadêmico para aprendizado
 Instituição: UPE
 
 
