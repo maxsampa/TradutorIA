@@ -13,7 +13,6 @@ logging.basicConfig(
 # Configuração da página
 st.set_page_config(
     page_title="TradutorIA",
-    page_icon="🌎",
     layout="centered"
 )
 
@@ -21,45 +20,37 @@ st.set_page_config(
 @st.cache_resource(show_spinner=False)
 def carregar_modelo():
     try:
-        # Configuração para usar menos memória
-        config = {
-            "low_cpu_mem_usage": True,
-            # Removemos torch_dtype para usar o padrão
-        }
-        
         tokenizer = AutoTokenizer.from_pretrained(
             "bigscience/bloom-560m",
-            **config
+            low_cpu_mem_usage=True
         )
         modelo = AutoModelForCausalLM.from_pretrained(
             "bigscience/bloom-560m",
-            **config
+            low_cpu_mem_usage=True
         )
         return tokenizer, modelo
     except Exception as e:
         logging.exception("Erro ao carregar o modelo de IA.")
-        st.error(f'Erro ao carregar o modelo: {str(e)}') # User-facing error for critical failure
+        st.error(f'Erro ao carregar o modelo: {str(e)}')
         return None, None
 
 # Função otimizada para gerar texto
-def gerar_texto_bloom(texto, tokenizer, modelo, max_length=512): # Increased max_length from 50 to 512
+def gerar_texto_bloom(texto, tokenizer, modelo, max_length=512):
     try:
         with torch.inference_mode():
-            # Prompt alterado para refinar o texto em português
-            texto_original_para_prompt = texto # Guardar o texto original para o prompt
-            prompt = f"Refine e reescreva o seguinte texto em português, mantendo o significado original e tornando-o mais claro e polido: {texto_original_para_prompt}"
-            
+            prompt = f"Refine e reescreva o seguinte texto em português, mantendo o significado original e tornando-o mais claro e polido: {texto}"
+
             entradas = tokenizer(
                 prompt,
                 return_tensors='pt',
                 padding=True,
                 truncation=True,
-                max_length=max_length # Uses the updated max_length
+                max_length=max_length
             )
-            
+
             saidas = modelo.generate(
                 entradas.input_ids,
-                max_length=max_length, # Uses the updated max_length
+                max_length=max_length,
                 temperature=0.3,
                 num_return_sequences=1,
                 repetition_penalty=1.5,
@@ -69,26 +60,21 @@ def gerar_texto_bloom(texto, tokenizer, modelo, max_length=512): # Increased max
                 top_p=0.7,
                 pad_token_id=tokenizer.pad_token_id
             )
-            
+
             texto_gerado = tokenizer.decode(saidas[0], skip_special_tokens=True)
-            
-            # Remove o prompt da saída se necessário - Lógica de limpeza refinada
-            prompt_prefix_to_remove = "Refine e reescreva o seguinte texto em português, mantendo o significado original e tornando-o mais claro e polido: "
-            
-            if texto_gerado.startswith(prompt_prefix_to_remove):
-                texto_gerado = texto_gerado[len(prompt_prefix_to_remove):].strip()
-            # Fallback mais conservador: considera o caso de o modelo não repetir o prompt completo,
-            # mas apenas parte dele ou adicionar um prefixo antes do texto refinado.
-            # Evita remover partes do texto original se ele contiver ":"
-            elif ":" in texto_gerado and texto_original_para_prompt not in texto_gerado.split(":", 1)[0]:
-                 partes = texto_gerado.split(": ", 1)
-                 # Heurística: se a parte antes do ':' for curta e não o texto original, provavelmente é um prefixo do modelo.
-                 if len(partes) > 1 and len(partes[0]) < 0.8 * len(texto_gerado) and texto_original_para_prompt not in partes[0]:
-                     texto_gerado = partes[-1].strip()
-                
+
+            # Remove o prompt da saída se presente
+            prompt_prefix = "Refine e reescreva o seguinte texto em português, mantendo o significado original e tornando-o mais claro e polido: "
+            if texto_gerado.startswith(prompt_prefix):
+                texto_gerado = texto_gerado[len(prompt_prefix):].strip()
+            elif ": " in texto_gerado:
+                partes = texto_gerado.split(": ", 1)
+                if len(partes) > 1:
+                    texto_gerado = partes[1].strip()
+
             return texto_gerado
     except Exception as e:
-        logging.exception(f"Erro na geração de texto para entrada: '{texto_original_para_prompt[:50]}...'")
+        logging.exception(f"Erro na geração de texto para entrada: '{texto[:50]}...'")
         raise Exception(f'Erro na geração de texto: {str(e)}') from e
 
 # Função de tradução otimizada
@@ -104,7 +90,7 @@ def traduzir(texto, idioma_destino):
 
 # Interface principal
 def main():
-    st.title("🌎 TradutorIA")
+    st.title("TradutorIA")
     st.markdown("---")
     
     # Dicionário de idiomas
@@ -145,7 +131,7 @@ def main():
 
     # Footer leve
     st.markdown("---")
-    st.markdown("💡 **Dica**: Textos mais curtos têm melhor performance.")
+    st.markdown("**Dica**: Textos mais curtos têm melhor performance.")
 
 if __name__ == "__main__":
     main()
