@@ -1,61 +1,69 @@
-🤖 TradutorIA: Aplicativo web de tradução com Inteligência Artificial
+# TradutorIA
 
-Aplicação que utiliza o modelo de linguagem BLOOM para refinar o texto em português antes de traduzi-lo com o Google Translate para inglês, espanhol e francês.
+Web application that refines Portuguese text with a language model before translating it into English, Spanish or French.
 
-🎯 Funcionalidades
-- **Tradução com Refinamento IA**: O texto em português é pré-processado pelo modelo BLOOM para clareza e polimento, e depois traduzido pelo Google Translate.
-- **Tradução Direta**: Utiliza o Google Translate diretamente para tradução.
-- Suporte para 3 idiomas de destino: inglês, espanhol e francês.
-- Interface web responsiva e amigável.
+**Live demo:** https://tradutoria-bloom.streamlit.app/
 
-🛠️ Tecnologias
-- Python
-- Streamlit
-- Transformers (para o modelo BLOOM 560M)
-- Google Translate (via biblioteca `googletrans`)
-- PyTorch
+## Why this exists
 
-🚀 Executando Localmente
+Machine translation degrades when the source text is unclear — long sentences, informal register, ambiguous pronouns. TradutorIA inserts a refinement step *before* translation: the Portuguese input is first rewritten by BLOOM 560M for clarity, then translated. The app exposes both paths side by side so the effect of the refinement step is visible rather than assumed.
 
-1.  **Clone o repositório:**
-    ```bash
-    git clone <https://github.com/seu-usuario/TradutorIA.git> # Substitua pela URL correta do seu repositório
-    cd TradutorIA
-    ```
+## How it works
 
-2.  **Crie e ative um ambiente virtual (recomendado):**
-    ```bash
-    python -m venv venv
-    ```
-    *   No Windows:
-        ```bash
-        venv\Scripts\activate
-        ```
-    *   No macOS/Linux:
-        ```bash
-        source venv/bin/activate
-        ```
+```
+Portuguese input
+      │
+      ├─► direct path ──────────────► Google Translate ──► output
+      │
+      └─► BLOOM 560M (refinement) ──► Google Translate ──► output
+```
 
-3.  **Instale as dependências:**
-    Certifique-se de ter um arquivo `requirements.txt` no seu projeto com todas as bibliotecas necessárias (streamlit, transformers, googletrans, torch).
-    ```bash
-    pip install -r requirements.txt
-    ```
+Both outputs are shown in the interface, so the user compares refined vs. direct translation for the same input.
 
-4.  **Execute a aplicação Streamlit:**
-    ```bash
-    streamlit run TradutorIA.py
-    ```
+## Features
 
-⚠️ Limitações e Considerações
-- **Recursos do Modelo BLOOM:** O modelo BLOOM 560M é computacionalmente intensivo. Sua execução local pode ser lenta ou exigir uma quantidade significativa de RAM, especialmente na primeira vez que o modelo é baixado e carregado.
-- **Estabilidade do `googletrans`:** A biblioteca `googletrans` depende de APIs não oficiais do Google Translate e pode apresentar instabilidade ou parar de funcionar se o Google alterar suas APIs.
-- **Limite de Comprimento para Refinamento IA:** O pré-processamento de texto com o modelo BLOOM está configurado para um comprimento máximo (atualmente 512 tokens). Textos mais longos que isso serão truncados durante a etapa de refinamento.
-- **Qualidade do Refinamento:** A qualidade do texto refinado pelo BLOOM pode variar. O objetivo é melhorar a clareza, mas o resultado é gerado por IA e pode não ser perfeito.
+- Refinement of the Portuguese source with BLOOM 560M before translation
+- Direct translation path for comparison
+- Target languages: English, Spanish, French
+- Responsive web interface (Streamlit)
 
-🎓 Projeto Acadêmico para aprendizado
-Instituição: UPE
+## Stack
 
-🔗 Links
-App: https://tradutoria-bloom.streamlit.app/ (Nota: Este link pode apontar para uma versão anterior ou não estar atualizado com as últimas modificações locais.)
-LinkedIn: https://www.linkedin.com/in/fabio-a-ribeiro/
+Python · Streamlit · Hugging Face Transformers (BLOOM 560M) · PyTorch · `googletrans`
+
+## Running locally
+
+```bash
+git clone https://github.com/maxsampa/TradutorIA.git
+cd TradutorIA
+
+python -m venv venv
+source venv/bin/activate      # Windows: venv\Scripts\activate
+
+pip install -r requirements.txt
+streamlit run TradutorIA.py
+```
+
+First run downloads the BLOOM 560M weights (~1.1 GB). Expect a slow cold start.
+
+**Requirements:** Python 3.10+ and roughly 4 GB of free RAM for the refinement model.
+
+## Known limitations
+
+- **BLOOM 560M cost:** the model is computationally heavy. Local execution can be slow, and the first load downloads and caches the weights.
+- **`googletrans` stability:** the library relies on unofficial Google Translate endpoints and can break without notice if those endpoints change. A production version would use the paid Cloud Translation API.
+- **Refinement input length:** capped at 512 tokens. Longer texts are truncated before refinement.
+- **Refinement quality varies:** the rewriting is model-generated. It improves clarity in most cases but is not guaranteed to preserve every nuance — see Evaluation.
+- **No domain adaptation:** technical or specialized vocabulary is not handled specially.
+
+## Not intended for
+
+Legal, medical or contractual translation, or any use where a mistranslation carries material consequence.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+---
+
+Originally developed as an academic project (UPE, Especialização em IA Generativa) and maintained since.
