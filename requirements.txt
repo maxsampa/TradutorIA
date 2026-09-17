@@ -1,5 +1,7 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 streamlit==1.32.0
 transformers==4.37.0
-torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu
+torch==2.2.0
 googletrans==3.1.0a0
-accelerate==0.27.0  # Adicionando esta linha
+accelerate==0.27.0
